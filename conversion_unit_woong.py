@@ -26,16 +26,17 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
 # 단위 변환 함수
-def convert_unit(value, in_unit, out_unit):
+def convert_unit(value, in_, out_):
 
     # 0 단위 리스트 넘버
-    length = {'단위': '길이',
+    length = {'단위': '길이', 'unit': 'length',
               '밀리미터': 1000, '센티미터': 100, '미터': 1, '킬로미터': 0.001, '인치': 39.370079,
               '피트': 3.28084, '야드': 1.093613, '마일': 0.000621, '센치미터': 100,
               '미리미터': 1000, '밀리미터': 1000, '미리': 1000, '밀리': 1000, '센치': 100, '센티': 100,
               '자': 3.3, '간': 0.55, '정': 0.009167, '리': 0.002546, '해리': 0.00054}
+
     # 1
-    data = {'단위': '데이터양',
+    data = {'단위': '데이터양', 'unit': 'data',
             '비트': 8.886808, '바이트': 1048576.0,
             '킬로바이트': 1024.0, '메가바이트': 1,
             '기가바이트': 0.000977,
@@ -43,7 +44,7 @@ def convert_unit(value, in_unit, out_unit):
             '엑사바이트': 0.00000000000090949}
 
     # 2
-    weight = {'단위': '무게',
+    weight = {'단위': '무게', 'unit': 'weight',
               '밀리그램': 1000000, '그램': 1000, '킬로그램': 1,
               '톤': 0.001, '킬로톤': 0.0000001, '그레인': 15432.3584,
               '온스': 35.273962, '파운드': 2.204623, '돈': 266.66666666,
@@ -51,17 +52,17 @@ def convert_unit(value, in_unit, out_unit):
               '킬로그람': 1, '밀리그람': 1000000}
 
     # 3
-    temperature = {'단위': '온도',
+    temperature = {'단위': '온도', 'unit': 'temperature',
                    '섭씨온도': 1, '화씨온도': 33.8, '절대온도': 274.15, '섭씨': 1, '화씨': 33.8}
 
     # 4
-    area = {'단위': '넓이',
+    area = {'단위': '넓이', 'unit': 'area',
             '제곱미터': 3.305785, '아르': 0.033058, '헥타르': 0.000311,
             '제곱킬로미터': 0.00033058, '제곱피트': 35.583175,
             '제곱야드': 3.953686, '에이커': 0.000817, '평': 1}
 
     # 5
-    volume = {'단위': '부피',
+    volume = {'단위': '부피', 'unit': 'volume',
               '밀리리터': 1, '세제곱센티미터': 1000000,
               '리터': 1000, '세제곱인치': 61027,
               '세제곱피트': 35.3165, '세제곱야드': 1.30820,
@@ -69,7 +70,7 @@ def convert_unit(value, in_unit, out_unit):
               '갤런': 264.186, '세제곱센치미터': 1000000, '미리리터': 1}
 
     # 6
-    atom_pressure = {'단위': '압력',
+    atom_pressure = {'단위': '압력', 'unit': 'atom_pressure',
                      '파스칼': 101325, '헥토파스칼': 1013.25,
                      '킬로파스칼': 101.325, '메가파스칼': 0.101325,
                      '밀리바': 1013.25, '바': 1.01325, '프사이': 14.696,
@@ -79,83 +80,69 @@ def convert_unit(value, in_unit, out_unit):
     unit_list = [length, data, weight, temperature, area, volume, atom_pressure]
 
     # 은/는 비교해서 넣어줄 리스트
-    convert_list = ['간', '정', '밀리그램', '그램', '킬로그램', '톤', '킬로톤', '그레인', '돈', '근',
-                    '그람', '킬로그람', '밀리그람', '평', '갤런', '파스칼', '헥토파스칼', '킬로파스칼',
-                    '메가파스칼']
-    in_index = -1
-    out_index = -1
-    cnt = 0
-    info_text = ''
+    josa_list = ['간', '정', '밀리그램', '그램', '킬로그램', '톤', '킬로톤', '그레인', '돈', '근',
+                 '그람', '킬로그람', '밀리그람', '평', '갤런', '파스칼', '헥토파스칼', '킬로파스칼',
+                 '메가파스칼', '데이터양', '압력']
+
     result = 0
-    try:
-        for i in range(len(unit_list)): # 입력한 2개의 단위가 리스트에 있는지 찾음
-            for row in unit_list[i]:
-                if in_unit == row:
-                    in_index = i
-                    print 'input==>', row
-                elif out_unit == row:
-                    out_index = i
-                    print 'output==>', row
-            if (cnt == len(unit_list)) and ((in_index == -1) or (out_index == -1)):
-                print '단위를 잘 못 입력하셨습니다.'
-                info_text = '단위를 잘 못 입력하셨습니다.'
-                return info_text
-            cnt += 1
-            # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 여기서 단위 잘 못 된거 처리하면 될듯..
 
-        print 'in_index = ', in_index
-        print 'out_index = ', out_index
-        print 'in_unit = ', in_unit
-        print 'out_unit = ', out_unit
+    for units in unit_list:
+        if in_ in units:
+            in_unit = units
+            print in_unit['unit']
+        if out_ in units:
+            out_unit = units
+            print out_unit['unit']
 
+    if in_unit == out_unit:
+        meters = (float(value) / in_unit[in_])
+        result = round(meters * in_unit[out_], 4)
+        print meters, "meters -----------"
+        print result, "result ------------"
 
-        print type(in_index)
-        print type(in_unit)
-        print type(out_unit)
-        print 'value type = ', type(value)
-
-    # 리스트에 있으면 계산, 없으면 단위 오류 출력
-        if in_index == out_index:
-
-            # print 'unit_list[in_index][in_unit] = ' + str(unit_list[in_index][in_unit])
-            # print type(unit_list[in_index][in_unit])
-            meters = float(value) / unit_list[in_index][in_unit]
-            print 'meters = ', meters
-
-            # print unit_list[in_index][out_unit]
-            result = round(meters * unit_list[in_index][out_unit], 4)
-            print 'result value = ', result
-
-        else:
-            print '없는 단위 입니다.'
-            info_text = '없는 단위 입니다.'
-            return info_text
-
-        if result != 0 and result % 10 == 0: # 1000 단위마다 ',' 찍어줌
+        if result != 0 and result % 10 == 0:  # 1000 단위마다 ',' 찍어줌
             result = int(result)
             result = "{:,}".format(result)
+
+        if value != 0 and value % 10 == 0:  # 1000 단위마다 ',' 찍어줌
+            value = int(value)
+            value = "{:,}".format(value)
+
+        if in_ in josa_list:
+            info_text = str(value) + in_ + '은 ' # 받침 o
+        else:
+            info_text = str(value) + in_ + '는 ' # 받침 x
+
+
+
             print 'result = ', result
-            # 은 -  밀리그램 그램 킬로그램 톤 킬로톤 그레인 돈 냥 근 관 평 홉 되 갤런 파스칼 헥토파스칼 킬로파스칼 메가파스칼
 
-        i = 0
-        for k in convert_list:
-            if k == in_unit:
-                info_text = str(value) + in_unit + '은 '
-                break
-            if i == len(k):
-                info_text = str(value) + in_unit + '는 '
+        info_text += str(result) + str(out_) + ' 입니다'
 
-            i += 1
-        # ^^^^^^^^^^^^^^^^^^^^ 은/는 함수 만들어서 구현하자..
+        return info_text
 
-        info_text += str(result) + str(out_unit) + ' 입니다.'
+    elif in_unit != out_unit:
+        # print in_unit['단위'] + "을 " + out_unit['단위'] + "으로 변환할 수 없습니다."
+        # info_text = in_unit['단위'] + "을 " + out_unit['단위'] + "으로 변환할 수 없습니다."
+        # return info_text
+        info_text = ''
+        if in_unit['단위'] in josa_list:
+            info_text = in_unit['단위'] + '을 ' # 받침 o
+        else:
+            info_text = in_unit['단위'] + '를 ' # 받침 x
 
-    except:
-        info_text = '정확히 입력해주세요.'
+        if out_unit['단위'] in josa_list:
+            b = out_unit['단위'] + '으로 ' # 받침 o
+        else:
+            b = out_unit['단위'] + '로 ' # 받침 x
 
-    print 'return info_text = ', info_text
-    return info_text
-    # return result
+        info_text += b + '변환할 수 없습니다.'
+        return info_text
+
+    else:
+        print "정확히 입력해주세요."
+        info_text = "정확히 입력해주세요."
+        return info_text
 
 
 class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
