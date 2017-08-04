@@ -66,7 +66,7 @@ def convert_unit(value, in_, out_):
               '리터': 1,
               '시시': 1000, '씨씨': 1000, 'cc': 1000, '밀리리터': 1000, '미리리터': 1000, '데시리터': 10,
               '세제곱센티미터': 1000, '세제곱센치미터': 1000, '세제곱미터': 0.001, '세제곱인치': 61.023744,
-              '세제곱피트': 0.035315, '세제곱야드': 0.001308, '갤런': 0.254172, '배럴': 0.006293, '온스': 33.814022
+              '세제곱피트': 0.035315, '세제곱야드': 0.001308, '갤런': 0.254172, '배럴': 0.006293, '온스': 33.814022,
               '홉': 5.543545, '되': 0.554354, '말': 0.055435}
 
     # 6
@@ -83,62 +83,62 @@ def convert_unit(value, in_, out_):
     # 은/는 비교해서 넣어줄 리스트
     josa_list = ['간', '정', '밀리그램', '그램', '킬로그램', '톤', '킬로톤', '그레인', '돈', '근',
                  '그람', '킬로그람', '밀리그람', '평', '갤런', '파스칼', '헥토파스칼', '킬로파스칼',
-                 '메가파스칼', '데이터양', '압력']
+                 '메가파스칼', '데이터양', '압력', '홉', '말']
+    try :
+        for units in unit_list:
+            if in_ in units:
+                in_unit = units
+                print in_unit['unit']
+            if out_ in units:
+                out_unit = units
+                print out_unit['unit']
 
-    result = 0
+        if in_unit == out_unit:
+            meters = (value / in_unit[in_])
+            result = round(meters * in_unit[out_], 4)
+            print meters, "meters -----------"
+            print result, "result ------------"
 
-    for units in unit_list:
-        if in_ in units:
-            in_unit = units
-            print in_unit['unit']
-        if out_ in units:
-            out_unit = units
-            print out_unit['unit']
+            print type(value), type(result)
 
-    if in_unit == out_unit:
-        meters = (value / in_unit[in_])
-        result = round(meters * in_unit[out_], 4)
-        print meters, "meters -----------"
-        print result, "result ------------"
-        print type(value), type(result)
+            value = format(dot(value), ',')
+            result = format(dot(result), ',')
 
-        value = format(dot(value), ',')
-        result = format(dot(result), ',')
+            if in_ in josa_list:
+                info_text = str(value) + in_ + '은 ' # 받침 o
+            else:
+                info_text = str(value) + in_ + '는 ' # 받침 x
 
-        if in_ in josa_list:
-            info_text = str(value) + in_ + '은 ' # 받침 o
+
+
+                print 'result = ', result
+
+            info_text += str(result) + str(out_) + ' 입니다'
+
+            return info_text
+
+        elif in_unit != out_unit:
+            info_text = ''
+            if in_unit['단위'] in josa_list:
+                info_text = in_unit['단위'] + '을 ' # 받침 o
+            else:
+                info_text = in_unit['단위'] + '를 ' # 받침 x
+
+            if out_unit['단위'] in josa_list:
+                b = out_unit['단위'] + '으로 ' # 받침 o
+            else:
+                b = out_unit['단위'] + '로 ' # 받침 x
+
+            info_text += b + '변환할 수 없습니다.'
+            return info_text
+
         else:
-            info_text = str(value) + in_ + '는 ' # 받침 x
+            print "정확히 입력해주세요."
+            info_text = "정확히 입력해주세요."
+            return info_text
 
-
-
-            print 'result = ', result
-
-        info_text += str(result) + str(out_) + ' 입니다'
-
-        return info_text
-
-    elif in_unit != out_unit:
-        # print in_unit['단위'] + "을 " + out_unit['단위'] + "으로 변환할 수 없습니다."
-        # info_text = in_unit['단위'] + "을 " + out_unit['단위'] + "으로 변환할 수 없습니다."
-        # return info_text
-        info_text = ''
-        if in_unit['단위'] in josa_list:
-            info_text = in_unit['단위'] + '을 ' # 받침 o
-        else:
-            info_text = in_unit['단위'] + '를 ' # 받침 x
-
-        if out_unit['단위'] in josa_list:
-            b = out_unit['단위'] + '으로 ' # 받침 o
-        else:
-            b = out_unit['단위'] + '로 ' # 받침 x
-
-        info_text += b + '변환할 수 없습니다.'
-        return info_text
-
-    else:
-        print "정확히 입력해주세요."
-        info_text = "정확히 입력해주세요."
+    except:
+        info_text = '정확히 입력해주세요.'
         return info_text
 
 
@@ -273,11 +273,12 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         self.get_sds_server()
         session_id = talk.session_id
         print "Session ID : " + str(session_id)
+        print talk
         print "[Question] ", talk.text
-
+        input_text = talk.text
+        input_text = input_text.replace("가정", "정")
         if talk.text[-3:] == '평이야':
             talk.text = talk.text[:-3] + '평이니'
-
         #
         # STEP #1
         #
@@ -291,7 +292,7 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
 
         sq = sds_pb2.SdsQuery()
         sq.session_key = sds_sessions.session_key
-        sq.utter = talk.text
+        sq.utter = input_text
 
         # Dialog UnderStand
         sds_act = self.sds_stub.Understand(sq)
