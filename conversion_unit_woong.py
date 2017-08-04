@@ -29,6 +29,8 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 # 단위 변환 함수
 def convert_unit(value, in_, out_, curs):
     value = float(value)
+
+    # 단위 DB 호출
     query = 'select * from conversion_unit'
     content = ''
     unit_list = list()
@@ -41,58 +43,6 @@ def convert_unit(value, in_, out_, curs):
                 if k == 'content':
                     content = row.get(k)
             unit_list.append(eval('{' + content + '}'))
-
-    # # 0 단위 리스트 넘버
-    # length = {'단위': '길이', 'unit': 'length',
-    #           '미터': 1,
-    #           '밀리미터': 1000, '센티미터': 100, '킬로미터': 0.001, '인치': 39.370079,
-    #           '피트': 3.28084, '야드': 1.093613, '마일': 0.000621, '센치미터': 100,
-    #           '미리미터': 1000, '밀리미터': 1000, '미리': 1000, '밀리': 1000, '센치': 100, '센티': 100,
-    #           '자': 3.3, '간': 0.55, '정': 0.009167, '리': 0.002546, '해리': 0.00054}
-    #
-    # # 1
-    # data = {'단위': '데이터양', 'unit': 'data',
-    #         '메가바이트': 1,
-    #         '비트': 8.886808, '바이트': 1048576.0, '킬로바이트': 1024.0, '기가바이트': 0.000977,
-    #         '테라바이트': 0.00000095367, '페타바이트': 0.00000000093132, '엑사바이트': 0.00000000000090949}
-    #
-    # # 2
-    # weight = {'단위': '무게', 'unit': 'weight',
-    #           '킬로그램': 1,
-    #           '밀리그램': 1000000, '그램': 1000, '톤': 0.001, '킬로톤': 0.0000001, '그레인': 15432.3584,
-    #           '온스': 35.273962, '파운드': 2.204623, '돈': 266.66666666, '근': 1.66666666,
-    #           '트로이온스': 32.10347680, '그람': 1000, '킬로그람': 1, '밀리그람': 1000000}
-    #
-    # # 3
-    # temperature = {'단위': '온도', 'unit': 'temperature',
-    #                '섭씨온도': 1,
-    #                '화씨온도': 33.8, '절대온도': 274.15, '섭씨': 1, '화씨': 33.8}
-    #
-    # # 4
-    # area = {'단위': '넓이', 'unit': 'area',
-    #         '평': 1,
-    #         '제곱미터': 3.305785, '아르': 0.033058, '헥타르': 0.000311,
-    #         '제곱킬로미터': 0.00033058, '제곱피트': 35.583175,
-    #         '제곱야드': 3.953686, '에이커': 0.000817}
-    #
-    # # 5
-    # volume = {'단위': '부피', 'unit': 'volume',
-    #           '리터': 1,
-    #           '시시': 1000, '씨씨': 1000, 'cc': 1000, '밀리리터': 1000, '미리리터': 1000, '데시리터': 10,
-    #           '세제곱센티미터': 1000, '세제곱센치미터': 1000, '세제곱미터': 0.001, '세제곱인치': 61.023744,
-    #           '세제곱피트': 0.035315, '세제곱야드': 0.001308, '갤런': 0.254172, '배럴': 0.006293, '온스': 33.814022,
-    #           '홉': 5.543545, '되': 0.554354, '말': 0.055435}
-    #
-    # # 6
-    # atom_pressure = {'단위': '압력', 'unit': 'atom_pressure',
-    #                  '기압': 1,
-    #                  '파스칼': 101325, '헥토파스칼': 1013.25,
-    #                  '킬로파스칼': 101.325, '메가파스칼': 0.101325,
-    #                  '밀리바': 1013.25, '바': 1.01325, '프사이': 14.696,
-    #                  '수은주밀리미터': 760, '수주밀리미터': 10332.275}
-    #
-    # # 단위 리스트
-    # unit_list = [length, data, weight, temperature, area, volume, atom_pressure]
 
     # 은/는 비교해서 넣어줄 리스트
     josa_list = ['간', '정', '밀리그램', '그램', '킬로그램', '톤', '킬로톤', '그레인', '돈', '근',
@@ -367,6 +317,10 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         print "Session ID : " + str(session_id)
         print "[Question] ", talk.text
 
+        # 가정 -> 정 예외처리 ex) 미터가 정으로 얼마야
+        input_text = talk.text
+        input_text = input_text.replace("가정", "정")
+
         if talk.text[-3:] == '평이야':
             talk.text = talk.text[:-3] + '평이니'
 
@@ -383,7 +337,8 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
 
         sq = sds_pb2.SdsQuery()
         sq.session_key = sds_sessions.session_key
-        sq.utter = talk.text
+        # sq.utter = talk.text
+        sq.utter = input_text
 
         # Dialog UnderStand
         sds_act = self.sds_stub.Understand(sq)
