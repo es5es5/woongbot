@@ -7,6 +7,7 @@ from concurrent import futures
 import time
 import argparse
 import grpc
+import pymysql
 from google.protobuf import empty_pb2
 
 import os
@@ -26,59 +27,72 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
 # 단위 변환 함수
-def convert_unit(value, in_, out_):
+def convert_unit(value, in_, out_, curs):
     value = float(value)
-    # 0 단위 리스트 넘버
-    length = {'단위': '길이', 'unit': 'length',
-              '미터': 1,
-              '밀리미터': 1000, '센티미터': 100, '킬로미터': 0.001, '인치': 39.370079,
-              '피트': 3.28084, '야드': 1.093613, '마일': 0.000621, '센치미터': 100,
-              '미리미터': 1000, '밀리미터': 1000, '미리': 1000, '밀리': 1000, '센치': 100, '센티': 100,
-              '자': 3.3, '간': 0.55, '정': 0.009167, '리': 0.002546, '해리': 0.00054}
+    query = 'select * from conversion_unit'
+    content = ''
+    unit_list = list()
+    curs.execute(query)
+    rows = curs.fetchall()
 
-    # 1
-    data = {'단위': '데이터양', 'unit': 'data',
-            '메가바이트': 1,
-            '비트': 8.886808, '바이트': 1048576.0, '킬로바이트': 1024.0, '기가바이트': 0.000977,
-            '테라바이트': 0.00000095367, '페타바이트': 0.00000000093132, '엑사바이트': 0.00000000000090949}
+    if curs.rowcount != 0:
+        for row in rows:
+            for k in row.keys():
+                if k == 'content':
+                    content = row.get(k)
+            unit_list.append(eval('{' + content + '}'))
 
-    # 2
-    weight = {'단위': '무게', 'unit': 'weight',
-              '킬로그램': 1,
-              '밀리그램': 1000000, '그램': 1000, '톤': 0.001, '킬로톤': 0.0000001, '그레인': 15432.3584,
-              '온스': 35.273962, '파운드': 2.204623, '돈': 266.66666666, '근': 1.66666666,
-              '트로이온스': 32.10347680, '그람': 1000, '킬로그람': 1, '밀리그람': 1000000}
-
-    # 3
-    temperature = {'단위': '온도', 'unit': 'temperature',
-                   '섭씨온도': 1,
-                   '화씨온도': 33.8, '절대온도': 274.15, '섭씨': 1, '화씨': 33.8}
-
-    # 4
-    area = {'단위': '넓이', 'unit': 'area',
-            '평': 1,
-            '제곱미터': 3.305785, '아르': 0.033058, '헥타르': 0.000311,
-            '제곱킬로미터': 0.00033058, '제곱피트': 35.583175,
-            '제곱야드': 3.953686, '에이커': 0.000817}
-
-    # 5
-    volume = {'단위': '부피', 'unit': 'volume',
-              '리터': 1,
-              '시시': 1000, '씨씨': 1000, 'cc': 1000, '밀리리터': 1000, '미리리터': 1000, '데시리터': 10,
-              '세제곱센티미터': 1000, '세제곱센치미터': 1000, '세제곱미터': 0.001, '세제곱인치': 61.023744,
-              '세제곱피트': 0.035315, '세제곱야드': 0.001308, '갤런': 0.254172, '배럴': 0.006293, '온스': 33.814022,
-              '홉': 5.543545, '되': 0.554354, '말': 0.055435}
-
-    # 6
-    atom_pressure = {'단위': '압력', 'unit': 'atom_pressure',
-                     '기압': 1,
-                     '파스칼': 101325, '헥토파스칼': 1013.25,
-                     '킬로파스칼': 101.325, '메가파스칼': 0.101325,
-                     '밀리바': 1013.25, '바': 1.01325, '프사이': 14.696,
-                     '수은주밀리미터': 760, '수주밀리미터': 10332.275}
-
-    # 단위 리스트
-    unit_list = [length, data, weight, temperature, area, volume, atom_pressure]
+    # # 0 단위 리스트 넘버
+    # length = {'단위': '길이', 'unit': 'length',
+    #           '미터': 1,
+    #           '밀리미터': 1000, '센티미터': 100, '킬로미터': 0.001, '인치': 39.370079,
+    #           '피트': 3.28084, '야드': 1.093613, '마일': 0.000621, '센치미터': 100,
+    #           '미리미터': 1000, '밀리미터': 1000, '미리': 1000, '밀리': 1000, '센치': 100, '센티': 100,
+    #           '자': 3.3, '간': 0.55, '정': 0.009167, '리': 0.002546, '해리': 0.00054}
+    #
+    # # 1
+    # data = {'단위': '데이터양', 'unit': 'data',
+    #         '메가바이트': 1,
+    #         '비트': 8.886808, '바이트': 1048576.0, '킬로바이트': 1024.0, '기가바이트': 0.000977,
+    #         '테라바이트': 0.00000095367, '페타바이트': 0.00000000093132, '엑사바이트': 0.00000000000090949}
+    #
+    # # 2
+    # weight = {'단위': '무게', 'unit': 'weight',
+    #           '킬로그램': 1,
+    #           '밀리그램': 1000000, '그램': 1000, '톤': 0.001, '킬로톤': 0.0000001, '그레인': 15432.3584,
+    #           '온스': 35.273962, '파운드': 2.204623, '돈': 266.66666666, '근': 1.66666666,
+    #           '트로이온스': 32.10347680, '그람': 1000, '킬로그람': 1, '밀리그람': 1000000}
+    #
+    # # 3
+    # temperature = {'단위': '온도', 'unit': 'temperature',
+    #                '섭씨온도': 1,
+    #                '화씨온도': 33.8, '절대온도': 274.15, '섭씨': 1, '화씨': 33.8}
+    #
+    # # 4
+    # area = {'단위': '넓이', 'unit': 'area',
+    #         '평': 1,
+    #         '제곱미터': 3.305785, '아르': 0.033058, '헥타르': 0.000311,
+    #         '제곱킬로미터': 0.00033058, '제곱피트': 35.583175,
+    #         '제곱야드': 3.953686, '에이커': 0.000817}
+    #
+    # # 5
+    # volume = {'단위': '부피', 'unit': 'volume',
+    #           '리터': 1,
+    #           '시시': 1000, '씨씨': 1000, 'cc': 1000, '밀리리터': 1000, '미리리터': 1000, '데시리터': 10,
+    #           '세제곱센티미터': 1000, '세제곱센치미터': 1000, '세제곱미터': 0.001, '세제곱인치': 61.023744,
+    #           '세제곱피트': 0.035315, '세제곱야드': 0.001308, '갤런': 0.254172, '배럴': 0.006293, '온스': 33.814022,
+    #           '홉': 5.543545, '되': 0.554354, '말': 0.055435}
+    #
+    # # 6
+    # atom_pressure = {'단위': '압력', 'unit': 'atom_pressure',
+    #                  '기압': 1,
+    #                  '파스칼': 101325, '헥토파스칼': 1013.25,
+    #                  '킬로파스칼': 101.325, '메가파스칼': 0.101325,
+    #                  '밀리바': 1013.25, '바': 1.01325, '프사이': 14.696,
+    #                  '수은주밀리미터': 760, '수주밀리미터': 10332.275}
+    #
+    # # 단위 리스트
+    # unit_list = [length, data, weight, temperature, area, volume, atom_pressure]
 
     # 은/는 비교해서 넣어줄 리스트
     josa_list = ['간', '정', '밀리그램', '그램', '킬로그램', '톤', '킬로톤', '그레인', '돈', '근',
@@ -98,7 +112,6 @@ def convert_unit(value, in_, out_):
             result = round(meters * in_unit[out_], 4)
             print meters, "meters -----------"
             print result, "result ------------"
-
             print type(value), type(result)
 
             value = format(dot(value), ',')
@@ -108,9 +121,6 @@ def convert_unit(value, in_, out_):
                 info_text = str(value) + in_ + '은 ' # 받침 o
             else:
                 info_text = str(value) + in_ + '는 ' # 받침 x
-
-
-
                 print 'result = ', result
 
             info_text += str(result) + str(out_) + ' 입니다'
@@ -142,6 +152,7 @@ def convert_unit(value, in_, out_):
         return info_text
 
 
+# float 변수에서 소숫점이 .0일 경우 int로 출력해주는 함수
 def dot(number):
     if int(number) == number:
         return int(number)
@@ -218,6 +229,25 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         self.sds_domain = init_param.params['sds_domain']
         print 'domain'
 
+        # DB
+        self.db_host = init_param.params['db_host']
+        print 'db_host'
+
+        self.db_port = init_param.params["db_port"]
+        print 'db_port'
+
+        self.db_user = init_param.params['db_user']
+        print 'db_user'
+
+        self.db_pwd = init_param.params['db_pwd']
+        print 'db_pwd'
+
+        self.db_database = init_param.params['db_database']
+        print 'db_database'
+
+        self.db_table = init_param.params['db_table']
+        print 'db_table'
+
         # CONNECT
         self.get_sds_server()
         print 'sds called'
@@ -264,21 +294,82 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         sds_domain.required = True
         params.append(sds_domain)
 
+        #DB
+        db_host = provider_pb2.RuntimeParameter()
+        db_host.name = 'db_host'
+        db_host.type = userattr_pb2.DATA_TYPE_STRING
+        db_host.desc = 'Database Host'
+        # db_host.default_value = '40.71.194.77'u
+        # db_host.default_value = '52.187.6.21'
+        db_host.default_value = '10.122.64.134'
+        db_host.required = True
+        params.append(db_host)
+
+        db_port = provider_pb2.RuntimeParameter()
+        db_port.name = 'db_port'
+        db_port.type = userattr_pb2.DATA_TYPE_STRING
+        db_port.desc = 'Database Port'
+        db_port.default_value = '3306'
+        db_port.required = True
+        params.append(db_port)
+
+        db_user = provider_pb2.RuntimeParameter()
+        db_user.name = 'db_user'
+        db_user.type = userattr_pb2.DATA_TYPE_STRING
+        db_user.desc = 'Database User'
+        # db_user.default_value = 'tutor'
+        db_user.default_value = 'minds'
+        db_user.required = True
+        params.append(db_user)
+
+        db_pwd = provider_pb2.RuntimeParameter()
+        db_pwd.name = 'db_pwd'
+        db_pwd.type = userattr_pb2.DATA_TYPE_STRING
+        db_pwd.desc = 'Database Password'
+        # db_pwd.default_value = 'ggoggoma'
+        db_pwd.default_value = 'ggoggoma67'
+        db_pwd.required = True
+        params.append(db_pwd)
+
+        db_database = provider_pb2.RuntimeParameter()
+        db_database.name = 'db_database'
+        db_database.type = userattr_pb2.DATA_TYPE_STRING
+        db_database.desc = 'Database Database name'
+        db_database.default_value = 'ascar'
+        db_database.required = True
+        params.append(db_database)
+
+        db_table = provider_pb2.RuntimeParameter()
+        db_table.name = 'db_table'
+        db_table.type = userattr_pb2.DATA_TYPE_STRING
+        db_table.desc = 'Database table'
+        db_table.default_value = 'conversion_unit'
+        db_table.required = True
+        params.append(db_table)
+
         result.params.extend(params)
         return result
 
 
 
     def Talk(self, talk, context):
+        conn = pymysql.connect(user='minds',
+                               password='ggoggoma67',
+                               host='10.122.64.134',
+                               database='ascar',
+                               charset='utf8',
+                               use_unicode=False)
+
+        curs = conn.cursor(pymysql.cursors.DictCursor)
+
         self.get_sds_server()
         session_id = talk.session_id
         print "Session ID : " + str(session_id)
-        print talk
         print "[Question] ", talk.text
-        input_text = talk.text
-        input_text = input_text.replace("가정", "정")
+
         if talk.text[-3:] == '평이야':
             talk.text = talk.text[:-3] + '평이니'
+
         #
         # STEP #1
         #
@@ -292,7 +383,7 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
 
         sq = sds_pb2.SdsQuery()
         sq.session_key = sds_sessions.session_key
-        sq.utter = input_text
+        sq.utter = talk.text
 
         # Dialog UnderStand
         sds_act = self.sds_stub.Understand(sq)
@@ -347,7 +438,7 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         print '====================================================================='
 
         if value != 0 or inputunit != '' or outputunit != '': # 단위변환 함수 호출
-            infotext = convert_unit(value, inputunit, outputunit)
+            infotext = convert_unit(value, inputunit, outputunit, curs)
             # result = convert_unit(value, inputunit, outputunit)
 
         else:
@@ -376,6 +467,9 @@ class conversion_unitDA(provider_pb2.DialogAgentProviderServicer):
         # talk_res.text = sdsUtter.response
         talk_res.state = provider_pb2.DIAG_CLOSED
         self.sds_stub.Close(dsk)
+
+        curs.close()
+        conn.close()
 
         return talk_res
 
@@ -417,3 +511,4 @@ def serve():
 
 if __name__ == '__main__':
     serve()
+
